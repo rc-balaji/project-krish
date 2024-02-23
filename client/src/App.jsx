@@ -3,7 +3,7 @@ import axios from 'axios';
 
 function App() {
   const handleButtonClick = (status) => {
-    axios.post('http://localhost:3001/publish', { status })
+    axios.post('https://project-krish.onrender.com/publish', { status })
       .then(response => {
         console.log('Message sent:', response.data);
       })
