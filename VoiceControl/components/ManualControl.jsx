@@ -19,11 +19,11 @@ const ManualControl = () => {
   const getCenterImage = () => {
     // Conditionally set the center image based on the status
     if (status === 'ON') {
-      return require('./centerOn.png'); // Path to the 'ON' state image
+      return require('./images/centerOn.png'); // Path to the 'ON' state image
     } else if (status === 'OFF') {
-      return require('./centerOff.png'); // Path to the 'OFF' state image
+      return require('./images/centerOff.png'); // Path to the 'OFF' state image
     }else{
-        return require('./centerOff.png'); 
+        return require('./images/centerOff.png'); 
     }
   };
 
@@ -32,21 +32,21 @@ const ManualControl = () => {
       <Text style={styles.header}>Controller</Text>
       <View style={styles.directionContainer}>
         <TouchableOpacity style={styles.directionButton} onPress={() => sendCommand('UP')}>
-          <Image source={require('./up.png')} style={styles.icon} />
+          <Image source={require('./images/up.png')} style={styles.icon} />
         </TouchableOpacity>
         <View style={styles.horizontal}>
           <TouchableOpacity style={styles.directionButton} onPress={() => sendCommand('LEFT')}>
-            <Image source={require('./left.png')} style={styles.icon} />
+            <Image source={require('./images/left.png')} style={styles.icon} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.centerButton} onPress={() => sendCommand('CENTER')}>
             <Image source={getCenterImage()} style={styles.centerButton} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.directionButton} onPress={() => sendCommand('RIGHT')}>
-            <Image source={require('./right.png')} style={styles.icon} />
+            <Image source={require('./images/right.png')} style={styles.icon} />
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.directionButton} onPress={() => sendCommand('DOWN')}>
-          <Image source={require('./down.png')} style={styles.icon} />
+          <Image source={require('./images/down.png')} style={styles.icon} />
         </TouchableOpacity>
       </View>
       <View style={styles.onOffContainer}>

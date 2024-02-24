@@ -82,7 +82,7 @@ const VoiceControl = () => {
         {isListening ? (
           <ActivityIndicator size="large" color="#FFFFFF" />
         ) : (
-          <Image source={require('./mic.png')} style={styles.micIcon} />
+          <Image source={require('./images/mic.png')} style={styles.micIcon} />
         )}
       </TouchableOpacity>
       {isListening && <Text style={styles.listeningText}>Listening...</Text>}
