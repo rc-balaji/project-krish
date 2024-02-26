@@ -1,100 +1,83 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Alert, PermissionsAndroid, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
+import { ActivityIndicator, Alert, Button, PermissionsAndroid, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const App = () => {
-  const device = useCameraDevice('back');
-  const [hasPermission, setHasPermission] = useState(false);
   const [scannedIp, setScannedIp] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [ipConfirmed, setIpConfirmed] = useState(false);
+  const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    const requestCameraPermission = async () => {
-      if (Platform.OS === 'android') {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-            {
-              title: "Camera Permission",
-              message: "This app needs access to your camera",
-              buttonNeutral: "Ask Me Later",
-              buttonNegative: "Cancel",
-              buttonPositive: "OK"
-            }
-          );
-          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-        } catch (err) {
-          console.warn(err);
-        }
-      } else {
-        setHasPermission(true);
-      }
-    };
-    requestCameraPermission();
-  }, []);
-
-  const codeScanner = useCodeScanner({
-    codeTypes: ['qr'],
-    onCodeScanned: (codes) => {
-      const ip = codes[0]?.value;
-      console.log(`Scanned IP: ${ip}`);
-      if (ip) {
-        setScannedIp(ip);
-        setIpConfirmed(true);
-      }
-    },
-  });
-
-  const sendCommand = async (message) => {
+  const sendMessage = async () => {
+    setIsSending(true);
     try {
       await axios.post(`http://${scannedIp}:8000/message`, { message });
+      setMessage('');
+      Alert.alert('Success', 'Message sent successfully.');
     } catch (error) {
-      Alert.alert('Error', 'Failed to send command to the server.');
+      Alert.alert('Error', 'Failed to send message to the server.');
+    } finally {
+      setIsSending(false);
     }
   };
 
-  if (!hasPermission) {
-    return <View style={styles.container}><Text>Camera permission is required.</Text></View>;
+  const sendCommand = async (command) => {
+    setIsSending(true);
+    try {
+      await axios.post(`http://${scannedIp}:8000/command`, { command });
+      Alert.alert('Success', `Command ${command} sent successfully.`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send command to the server.');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const confirmIp = () => {
+    if (scannedIp) {
+      setIpConfirmed(true);
+    } else {
+      Alert.alert('Error', 'Please enter a valid IP address.');
+    }
+  };
+
+  if (isSending) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000FF" />
+        <Text>Sending message...</Text>
+      </View>
+    );
   }
 
-  if (!device) {
-    return <View style={styles.container}><Text>Loading Camera...</Text></View>;
-  }
   return (
     <View style={styles.container}>
       <Text style={styles.header}>WIFI SCANNER</Text>
       {!ipConfirmed ? (
-        <View style={styles.scannerContainer}>
-          <Camera
-            device={device}
-            isActive={true}
-            style={styles.cameraStyle}
-            codeScanner={codeScanner}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter IP address"
+            placeholderTextColor="#000"
+            value={scannedIp}
+            onChangeText={setScannedIp}
+            keyboardType="numeric"
           />
+          <Button title="Confirm IP" onPress={confirmIp} />
         </View>
       ) : (
         <View style={styles.messageContainer}>
           <Text style={styles.ipText}>Current IP: {scannedIp}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your message"
+            placeholderTextColor="#000"
+            value={message}
+            onChangeText={setMessage}
+          />
+          <Button title="Send Message" onPress={sendMessage} />
           <View style={styles.commandButtonsContainer}>
-            <TouchableOpacity style={styles.commandButton} onPress={() => sendCommand('UP')}>
-              <Text>UP</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.commandButton} onPress={() => sendCommand('DOWN')}>
-              <Text>DOWN</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.commandButton} onPress={() => sendCommand('LEFT')}>
-              <Text>LEFT</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.commandButton} onPress={() => sendCommand('RIGHT')}>
-              <Text>RIGHT</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.commandButton} onPress={() => sendCommand('ON')}>
-              <Text>ON</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.commandButton} onPress={() => sendCommand('OFF')}>
-              <Text>OFF</Text>
-            </TouchableOpacity>
+            {/* Command Buttons */}
           </View>
         </View>
       )}
@@ -109,16 +92,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scannerContainer: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: '#000',
-    alignItems: 'center',
+  inputContainer: {
+    padding: 20,
     justifyContent: 'center',
-  },
-  cameraStyle: {
+    alignItems: 'center',
     width: '100%',
-    aspectRatio: 1,
   },
   header: {
     fontSize: 24,
