@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "build":"cd android && gradlew assembleRelease"
+    "build": "cd android && gradlew assembleRelease"
   },
   "dependencies": {
     "@react-native-voice/voice": "^3.2.4",
@@ -17,7 +17,7 @@
     "axios": "^1.6.7",
     "events": "^3.3.0",
     "react": "18.2.0",
-    "react-native": "0.73.4",
+    "react-native": "^0.73.5",
     "react-native-ble-manager": "^11.3.2",
     "react-native-network-info": "^5.2.1",
     "react-native-permissions": "^4.1.2",
