@@ -17,8 +17,8 @@ function MyTabs() {
           
             if (route.name === 'VoiceControl') {
               ImageSrc = focused
-                ? require('./activevoice.png') // path to your focused icon
-                : require('./inactivevoice.png'); // path to your unfocused icon
+                ? require('./activecontroller.png') // path to your focused icon
+                : require('./inactivecontroller.png'); // path to your unfocused icon
             } else if (route.name === 'ManualControl') {
               ImageSrc = focused
                 ? require('./activecontroller.png') // path to your focused icon

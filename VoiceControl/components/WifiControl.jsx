@@ -1,34 +1,34 @@
+import axios from 'axios';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import TcpSocket from 'react-native-tcp-socket';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
 
-const ManualControl = () => {
+const ManualControl = ({ serverIp }) => {
   const [status, setStatus] = useState('OFF');
-  const serverIp = '192.168.251.39';
-  const serverPort = 5000;
 
   const sendCommand = (command) => {
-    setStatus(command);
-    const client = TcpSocket.createConnection({ port: serverPort, host: serverIp }, () => {
-      client.write(command);
-    });
+    setStatus(command); // This sets the status to either 'ON' or 'OFF'
+    axios.post(`http://${serverIp}:8000/publish`, { status: command })
+      .then(response => {
+        console.log('Command sent:', response.data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  };
 
-    client.on('data', (data) => {
-      client.destroy();
-    });
-
-    client.on('error', (error) => {});
-
-    client.on('close', () => {});
+  const toggleCenterButton = () => {
+    const newStatus = status === 'OFF' ? 'ON' : 'OFF';
+    sendCommand(newStatus);
   };
 
   const getCenterImage = () => {
-    if (status === 'ON') {
-      return require('./images/centerOn.png');
-    } else if (status === 'OFF') {
-      return require('./images/centerOff.png');
-    } else {
-      return require('./images/centerOff.png'); 
+    switch (status) {
+      case 'ON':
+        return require('./images/centerOn.png'); // Adjust the path as needed
+      case 'OFF':
+        return require('./images/centerOff.png'); // Adjust the path as needed
+      default:
+        return require('./images/centerOff.png'); // Default image or adjust as needed
     }
   };
 
@@ -43,8 +43,8 @@ const ManualControl = () => {
           <TouchableOpacity style={styles.directionButton} onPress={() => sendCommand('LEFT')}>
             <Image source={require('./images/left.png')} style={styles.icon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.centerButton} onPress={() => sendCommand(status === 'ON' ? 'OFF' : 'ON')}>
-            <Image source={getCenterImage()} style={styles.centerIcon} />
+          <TouchableOpacity style={styles.centerButton} onPress={toggleCenterButton}>
+            <Image source={getCenterImage()} style={styles.icon} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.directionButton} onPress={() => sendCommand('RIGHT')}>
             <Image source={require('./images/right.png')} style={styles.icon} />
@@ -54,14 +54,60 @@ const ManualControl = () => {
           <Image source={require('./images/down.png')} style={styles.icon} />
         </TouchableOpacity>
       </View>
-      <View style={styles.onOffContainer}>
-        <TouchableOpacity style={[styles.onOffButton, styles.onButton]} onPress={() => sendCommand('ON')}>
-          <Text style={styles.buttonText}>ON</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.onOffButton, styles.offButton]} onPress={() => sendCommand('OFF')}>
-          <Text style={styles.buttonText}>OFF</Text>
-        </TouchableOpacity>
-      </View>
+    </View>
+  );
+};
+
+
+const WifiControl = () => {
+  const [serverIp, setServerIp] = useState('');
+  const [ipConfirmed, setIpConfirmed] = useState(false);
+
+  const checkIpAvailability = async () => {
+    if (!serverIp) {
+      Alert.alert('Error', 'Please enter an IP address.');
+      return;
+    }
+    try {
+      const response = await axios.get(`http://${serverIp}:8000/check`);
+      if (response.status === 200) {
+        Alert.alert('Success', 'IP Available');
+        setIpConfirmed(true);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'IP Not Available');
+    }
+  };
+
+  const changeIp = () => {
+    setIpConfirmed(false);
+    setServerIp('');
+  };
+
+  return (
+    <View style={styles.container}>
+      {!ipConfirmed ? (
+        <>
+          <TextInput
+            style={styles.input}
+            onChangeText={setServerIp}
+            value={serverIp}
+            placeholder="Enter Server IP"
+            keyboardType="numeric"
+          />
+          <TouchableOpacity style={styles.confirmButton} onPress={checkIpAvailability}>
+            <Text style={styles.buttonText}>Check IP Availability</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <Text>Connected to: {serverIp}</Text>
+          <TouchableOpacity style={styles.changeButton} onPress={changeIp}>
+            <Text style={styles.buttonText}>Change IP</Text>
+          </TouchableOpacity>
+          <ManualControl serverIp={serverIp} />
+        </>
+      )}
     </View>
   );
 };
@@ -73,10 +119,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+    width: '80%',
     marginBottom: 20,
+  },
+  confirmButton: {
+    backgroundColor: 'blue',
+    padding: 10,
+    borderRadius: 5,
+  },
+  changeButton: {
+    backgroundColor: 'orange',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
   },
   directionContainer: {
     justifyContent: 'center',
@@ -95,32 +155,16 @@ const styles = StyleSheet.create({
     margin: 10,
     width: 70,
     height: 70,
-    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  centerIcon: {
-    width: 50,
-    height: 50,
-  },
-  onOffContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  onOffButton: {
-    padding: 20,
-    borderRadius: 10,
-    margin: 10,
-  },
-  onButton: {
-    backgroundColor: 'green',
-  },
-  offButton: {
-    backgroundColor: 'red',
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
   },
   icon: {
     width: 50,
@@ -128,4 +172,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ManualControl;
+export default WifiControl;
