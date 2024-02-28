@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import VoiceControl from '../components/VoiceControl'; // Ensure this path is correct
 import ManualControl from '../components/ManualControl'; // Ensure this path is correct
-import WifiControl from '../components/WifiControl'; // Ensure this path is correct
+import WifiControl from '../components/PicoControl'; // Ensure this path is correct
 import BluetoothControl from '../components/BluetoothControl'; // Import the BluetoothControl component, update the path as necessary
 import { Image } from 'react-native';
 
